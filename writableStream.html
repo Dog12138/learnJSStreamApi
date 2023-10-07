@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let words = ['h','e', 'l', 'l', 'o'];
+        //controller 参数是一个 WritableStreamDefaultController
+        //该可写流内部没有存储空间只是一个空壳
+        let writableStream = new WritableStream({
+            //该方法调用构造函数时就会调用
+            start(controller){
+                console.log("writableStream start()");
+            },
+            // writableStream.getWriter().write()
+            // chunk参数类型不定
+            write(chunk, controller){
+                console.log("writableStream write()", chunk);
+            },
+            // writableStream.close();
+            // writableStream.getWriter().close()
+            close(controller){
+                console.log("writableStream close()");
+            },
+            // writableStream.abort();
+            // writableStream.getWriter().abort();
+            abort(reason){
+                console.log("writableStream abort()");
+            }
+        })
+
+        let writer = writableStream.getWriter();
+
+        
+        //ready 属性返回 Promise
+        writer.ready.then(()=>{
+            for(const c of words){
+                writer.write(c);
+            }
+
+            writer.ready.then(()=>{
+                writer.close();
+            })
+        })
+
+        // writer.abort();
+        // writer.close();
+
+        // writableStream.abort();
+        // writableStream.close();
+    </script>
+</body>
+</html>
