@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadableStream流api功能尝试</title>
+</head>
+<body>
+    <script>
+        //1.注意： 数据通过controller.enqueue()方法向可读流中加入
+        //2.controller有 ReadableStreamDefaultController 或 ReadableByteStreamController 两种，具体取决于 type 属性的值
+        //3.不调用controller.close()流就不会关闭，
+        //  一旦通过controller.enqueue()方法写入数据，
+        //  readStream.getReader().read()就会获取到
+        let readStream = new ReadableStream({
+            startTime: null,
+            start(controller){
+                //验证 start() 方法 new ReadableStream 时就会调用
+                console.log(1111111111);
+
+                oldTime = Date.now();
+
+
+                let interval = setInterval(()=>{
+                    
+                    controller.enqueue('hello');
+                    if(Date.now() - oldTime > 3000){
+                        //不调用此方法，流就不会关闭
+                        //一旦通过controller.enqueue()方法写入数据，
+                        //readStream.getReader().read()就会获取到
+                        controller.close();
+                        clearInterval(interval);
+                    }
+                }, 1000);
+                
+            },
+            pull(controller){
+                //验证 pull() 方法 new ReadableStream 时就会调用
+                //此外当被reader.read()调用时也会调用一次此方法
+                console.log(222222);
+                // controller.enqueue('hello');
+            },
+            cancel(reason){
+                //验证调用构造函数时不调用
+                // console.log(33333333);
+            }
+        })
+
+        let reader = readStream.getReader();
+
+        reader.read().then(function tmp({value, done}){
+            if(done){
+                console.log('读取完毕',value, done);
+            }else{
+                console.log("immediately read", value, done);
+                return reader.read().then(tmp);
+            }
+        })
+    </script>
+</body>
+</html>
