@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        const readableStream = new ReadableStream({
+            start(controller){
+                console.log('[readable start]');
+                for(let word of 'hello,world'){
+                    controller.enqueue(word);
+                }
+            },
+            pull(controller){
+                controller.enqueue(',goodbye')
+                console.log('[readable pull]');
+                controller.close();
+            },
+            cancel(reason){
+                console.log('[readable cancel]', reason);
+            }
+        })
+
+        const writableStream = new WritableStream({
+            start(controller){
+                console.log('[writable start]');
+            },
+            async write(chunk, controller){
+                console.log('[writable write]');
+                await new Promise((resolve, reject)=>{
+                    setTimeout(()=>{
+                        document.body.innerText += chunk;
+                        resolve();
+                    }, 1000);
+                })
+            },
+            close(controller){
+                console.log('[writable close]');
+            }
+        })
+
+        readableStream.pipeTo(writableStream).then(()=>{
+            console.log('[finish]');
+        });
+    </script>
+</body>
+</html>

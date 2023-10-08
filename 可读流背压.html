@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背压</title>
+</head>
+<body>
+    <script>
+        let readableStream = new ReadableStream({
+            start(controller){
+                controller.enqueue('start');
+            },
+            pull(controller){
+                console.log('[pull] [desiredSize]:' + controller.desiredSize);
+                controller.enqueue('pull');
+            },
+            cancel(reason){
+            }
+        }, {
+            highWaterMark: 10,
+            size(chunk){
+                console.log('[size]', chunk.length)
+                return chunk.length;
+            }
+        });
+
+        (async ()=>{
+            let reader = readableStream.getReader();
+            for(let result = await reader.read(), i = 0; result.done == false && i < 10; result = await reader.read(), i++){
+                console.log('[value]', result.value, ' [done]',result.done, '[i]', i);
+            }
+        })();
+    </script>
+</body>
+</html>

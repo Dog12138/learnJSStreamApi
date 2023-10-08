@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        const readableStream = new ReadableStream({
+            start(controller){
+                console.log('[start]');
+                controller.enqueue('hello');
+                controller.enqueue(',world');
+            },
+            pull(controller){
+                console.log('[pull]');
+                controller.close();
+            },
+            cancel(reason){
+                console.log('[cancel]');
+            }
+        })
+
+        const transformStream =  new TransformStream({
+            start(controller){
+                console.log('[transform start]');
+            },
+            transform(chunk, controller){
+                console.log('[transform transform]', chunk);
+                controller.enqueue(chunk.toUpperCase());
+                document.body.innerText += chunk.toUpperCase();
+            },
+            flush(controller){
+                console.log('[transform flush]');
+                controller.terminate();
+            }
+        })
+
+        let reader = readableStream.pipeThrough(transformStream).getReader();
+
+        reader.read().then(function tmp({value, done}){
+            if(done){
+                console.log('finish');
+                return Promise.resolve();
+            }
+            reader.read().then(tmp);
+        })
+    </script>
+</body>
+</html>

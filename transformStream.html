@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //写入流==>转换流==>可读流
+        const textEncoderStream = new TransformStream({
+            start(controller){
+                controller.enqueue('start');
+            },
+            transform(chunk, controller){
+                console.log('[transform]',chunk);
+                //将字符串转成typedArray
+                controller.enqueue(new TextEncoder().encode(chunk));
+            },
+            flush(controller){
+                console.log('[flush]');
+                controller.terminate();
+            },
+        });
+
+        (async () => {
+            const readStream = textEncoderStream.readable;
+            const writeStream = textEncoderStream.writable;
+
+            const writer = writeStream.getWriter();
+            for (const char of 'abc') {
+                writer.write(char);
+            }
+            writer.close();
+
+            const reader = readStream.getReader();
+            for (let result = await reader.read(); !result.done; result = await reader.read()) {
+                console.log('[value]', result.value);
+            }
+        })();
+    </script>
+</body>
+</html>

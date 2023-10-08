@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        //无法理解，暂时搁置
+        (async ()=>{
+            const readableStream = new ReadableStream({ type: 'bytes',
+                start(controller){
+                    controller.enqueue(Uint8Array.from([1,2]));
+                    controller.close()
+                },
+            });
+            const reader = readableStream.getReader({ mode: "byob" });
+            let startingAB = new ArrayBuffer(1_024);
+            const buffer = await readInto(startingAB);
+            console.log("第一个 1024 字节或更少:", buffer);
+
+            async function readInto(buffer) {
+            let offset = 0;
+
+            console.log(buffer);
+            while (offset < buffer.byteLength) {
+                const { value: view, done } =
+                    await reader.read(new Uint8Array(buffer, offset, buffer.byteLength - offset));
+                buffer = view.buffer;
+                console.log(view, done, offset);
+                if (done) {
+                    break;
+                }
+                offset += view.byteLength;
+            }
+
+            return buffer;
+        };
+        })();
+    </script>
+</body>
+</html>

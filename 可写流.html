@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        const writableStream = new WritableStream({
+            async write(chunk, controller){
+                await new Promise((resolve, reject)=>{
+                    setTimeout(()=>{
+                        document.body.innerText += chunk;
+                        resolve();
+                    }, 1000);
+                })
+            },
+            close(controller){
+                console.log('[close]');
+            },
+            abort(reason){
+
+            }
+        });
+
+        (async ()=>{
+            const writer = writableStream.getWriter();
+
+            for await(let word of 'abcdefghijk'){
+                await writer.ready;
+                writer.write(word);
+            }
+
+            await writer.ready;
+            writer.close();
+        })();
+        
+    </script>
+</body>
+</html>
